@@ -1,0 +1,69 @@
+.page {
+    animation: fadeInUp 0.5s ease;
+}
+
+.inputSection {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: var(--space-6);
+    margin-bottom: var(--space-6);
+}
+
+.geneInput {
+    min-height: 160px;
+    font-family: 'Courier New', monospace;
+    font-size: var(--font-size-sm);
+}
+
+.paramsPanel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.runBtn {
+    margin-top: auto;
+}
+
+.resultsSection {
+    margin-top: var(--space-6);
+}
+
+.summaryRow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+}
+
+.networkCard {
+    margin-bottom: var(--space-6);
+}
+
+.errorMsg {
+    background: rgba(239, 68, 68, 0.06);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    color: var(--accent-red);
+    margin-bottom: var(--space-4);
+    font-size: var(--font-size-sm);
+}
+
+.sampleBtn {
+    font-size: var(--font-size-xs);
+    margin-left: var(--space-2);
+}
+
+.networkWrap {
+    position: relative;
+    width: 100%;
+    min-height: 500px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.edgeTable {
+    margin-top: var(--space-4);
+}

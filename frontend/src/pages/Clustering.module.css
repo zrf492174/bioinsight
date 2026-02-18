@@ -1,0 +1,59 @@
+.page {
+    animation: fadeInUp 0.5s ease;
+}
+
+.uploadSection {
+    margin-bottom: var(--space-6);
+}
+
+.paramsCard {
+    margin-bottom: var(--space-6);
+}
+
+.paramsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: var(--space-4);
+    align-items: end;
+}
+
+.runBtn {
+    margin-top: var(--space-4);
+}
+
+.resultsSection {
+    margin-top: var(--space-8);
+}
+
+.summaryRow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+}
+
+.chartsGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    margin-bottom: var(--space-6);
+}
+
+.chartCard {
+    margin-bottom: var(--space-6);
+}
+
+.errorMsg {
+    background: rgba(239, 68, 68, 0.06);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    color: var(--accent-red);
+    margin-bottom: var(--space-4);
+    font-size: var(--font-size-sm);
+}
+
+.sampleDataBtn {
+    margin-left: var(--space-3);
+    font-size: var(--font-size-xs);
+}
