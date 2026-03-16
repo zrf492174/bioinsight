@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routers import diff_analysis, clustering, go_enrichment, kegg_enrichment, heatmap, ppi, gene_convert, metabolism
+from backend.routers import diff_analysis, clustering, go_enrichment, kegg_enrichment, heatmap, ppi, gene_convert, metabolism, single_cell, spatial, compass, agent
 
 app = FastAPI(
     title="BioInsight API",
@@ -27,6 +27,10 @@ app.include_router(heatmap.router)
 app.include_router(ppi.router)
 app.include_router(gene_convert.router)
 app.include_router(metabolism.router)
+app.include_router(single_cell.router)
+app.include_router(spatial.router)
+app.include_router(compass.router)
+app.include_router(agent.router)
 
 
 @app.get("/api/health")

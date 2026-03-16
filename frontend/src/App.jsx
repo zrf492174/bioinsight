@@ -12,6 +12,9 @@ import PPIPage from './pages/PPIPage';
 import GeneConvert from './pages/GeneConvert';
 import MetabolismPage from './pages/MetabolismPage';
 import MetabolicMapPage from './pages/MetabolicMapPage';
+import SingleCell from './pages/SingleCell';
+import Spatial from './pages/Spatial';
+import CompassPage from './pages/CompassPage';
 
 export default function App() {
     return (
@@ -32,6 +35,9 @@ export default function App() {
                             <Route path="/gene-convert" element={<GeneConvert />} />
                             <Route path="/metabolism" element={<MetabolismPage />} />
                             <Route path="/metabolic-map" element={<MetabolicMapPage />} />
+                            <Route path="/single-cell" element={<SingleCell />} />
+                            <Route path="/spatial" element={<Spatial />} />
+                            <Route path="/compass" element={<CompassPage />} />
                             <Route path="/agent" element={<AgentChat />} />
                         </Routes>
                     </div>

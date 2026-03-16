@@ -11,6 +11,9 @@ import {
     ArrowLeftRight,
     Beaker,
     Map,
+    Microscope,
+    Layers,
+    Activity
 } from 'lucide-react';
 import styles from './Sidebar.module.css';
 
@@ -28,6 +31,9 @@ const analysisItems = [
     { path: '/gene-convert', icon: ArrowLeftRight, label: '基因名转换' },
     { path: '/metabolism', icon: Beaker, label: '代谢建模' },
     { path: '/metabolic-map', icon: Map, label: '代谢网络图' },
+    { path: '/single-cell', icon: Microscope, label: '单细胞分析' },
+    { path: '/spatial', icon: Layers, label: '空间转录组' },
+    { path: '/compass', icon: Activity, label: 'Compass 代谢' },
 ];
 
 const aiItems = [

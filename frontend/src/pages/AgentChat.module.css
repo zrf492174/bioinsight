@@ -4,12 +4,13 @@
 
 .chatContainer {
     display: grid;
-    grid-template-columns: 220px 1fr;
+    grid-template-columns: 240px 1fr;
     gap: var(--space-4);
     height: calc(100vh - 200px);
     min-height: 500px;
 }
 
+/* ── History Panel ── */
 .historyPanel {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -20,13 +21,39 @@
     box-shadow: var(--shadow-sm);
 }
 
+.historyHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-3);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--border-color);
+}
+
 .historyTitle {
     font-size: var(--font-size-sm);
     font-weight: 600;
     color: var(--text-heading);
-    margin-bottom: var(--space-3);
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--border-color);
+}
+
+.newChatBtn {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-fast);
+}
+
+.newChatBtn:hover {
+    background: var(--accent-purple);
+    color: white;
+    border-color: var(--accent-purple);
 }
 
 .historyList {
@@ -42,6 +69,13 @@
     cursor: pointer;
     transition: var(--transition-fast);
     margin-bottom: var(--space-1);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.historyItemText {
+    flex: 1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -53,6 +87,35 @@
     color: var(--text-primary);
 }
 
+.deleteBtn {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 3px;
+    transition: var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.historyItem:hover .deleteBtn {
+    opacity: 1;
+}
+
+.deleteBtn:hover {
+    color: var(--accent-red);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.emptyHistory {
+    text-align: center;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    padding: var(--space-6) 0;
+}
+
+/* ── Chat Panel ── */
 .chatPanel {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -72,10 +135,52 @@
     gap: var(--space-4);
 }
 
+/* ── Welcome Section ── */
+.welcomeSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--space-12) var(--space-6);
+    flex: 1;
+}
+
+.welcomeIcon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--gradient-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-bottom: var(--space-5);
+    box-shadow: var(--shadow-glow-purple);
+    animation: pulse-glow 3s infinite;
+}
+
+.welcomeTitle {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--text-heading);
+    margin-bottom: var(--space-3);
+}
+
+.welcomeDesc {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    max-width: 480px;
+    line-height: 1.7;
+    margin-bottom: var(--space-6);
+}
+
+/* ── Messages ── */
 .message {
     display: flex;
     gap: var(--space-3);
-    max-width: 80%;
+    max-width: 85%;
+    animation: fadeInUp 0.3s ease;
 }
 
 .messageUser {
@@ -112,42 +217,189 @@
     padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-md);
     font-size: var(--font-size-sm);
-    line-height: 1.6;
+    line-height: 1.7;
 }
 
 .messageBot .messageBubble {
     background: var(--bg-tertiary);
     color: var(--text-primary);
+    border-top-left-radius: 4px;
 }
 
 .messageUser .messageBubble {
-    background: rgba(59, 130, 246, 0.08);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(139, 92, 246, 0.10));
     color: var(--text-primary);
+    border-top-right-radius: 4px;
 }
 
-.comingSoonBanner {
+/* ── Markdown rendering ── */
+.mdH2 {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--text-heading);
+    margin: var(--space-3) 0 var(--space-2);
+}
+
+.mdH3 {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--text-heading);
+    margin: var(--space-2) 0 var(--space-1);
+}
+
+.mdH4 {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-heading);
+    margin: var(--space-2) 0 var(--space-1);
+}
+
+.mdPara {
+    margin: var(--space-1) 0;
+}
+
+.mdSpacer {
+    height: var(--space-2);
+}
+
+.mdListItem {
+    display: flex;
+    gap: var(--space-2);
+    padding: var(--space-1) 0;
+}
+
+.mdBullet {
+    color: var(--accent-purple);
+    flex-shrink: 0;
+    font-weight: 600;
+}
+
+.mdNum {
+    color: var(--accent-blue);
+    flex-shrink: 0;
+    font-weight: 600;
+    min-width: 1.5em;
+}
+
+.inlineCode {
+    background: rgba(139, 92, 246, 0.08);
+    color: var(--accent-purple);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-family: 'Fira Code', 'SF Mono', monospace;
+}
+
+.codeBlock {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    overflow-x: auto;
+    font-family: 'Fira Code', 'SF Mono', monospace;
+    font-size: 0.82em;
+    line-height: 1.6;
+    margin: var(--space-2) 0;
+}
+
+/* ── Tool Call Card ── */
+.toolCard {
+    margin: var(--space-2) 0;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: rgba(139, 92, 246, 0.03);
+    max-width: 85%;
+    animation: fadeInUp 0.3s ease;
+}
+
+.toolCardHeader {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-3) var(--space-4);
-    background: rgba(139, 92, 246, 0.06);
-    border: 1px solid rgba(139, 92, 246, 0.12);
-    border-radius: var(--radius-md);
-    color: var(--accent-purple);
-    font-size: var(--font-size-sm);
-    margin-bottom: var(--space-4);
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    font-size: var(--font-size-xs);
 }
 
+.toolCardHeader:hover {
+    background: rgba(139, 92, 246, 0.06);
+}
+
+.toolCardIcon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: var(--gradient-accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.toolCardName {
+    font-weight: 600;
+    color: var(--text-heading);
+    flex: 1;
+}
+
+.toolCardStatus {
+    font-size: var(--font-size-xs);
+    color: var(--accent-green);
+    font-weight: 500;
+}
+
+.toolCardBody {
+    border-top: 1px solid rgba(139, 92, 246, 0.1);
+    padding: var(--space-3);
+}
+
+.toolCardSection {
+    margin-bottom: var(--space-2);
+}
+
+.toolCardSection:last-child {
+    margin-bottom: 0;
+}
+
+.toolCardLabel {
+    display: block;
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: var(--space-1);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.toolCardPre {
+    background: var(--bg-tertiary);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    font-size: 0.78em;
+    font-family: 'Fira Code', 'SF Mono', monospace;
+    overflow-x: auto;
+    max-height: 200px;
+    overflow-y: auto;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* ── Quick Prompts ── */
 .quickPrompts {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2);
-    margin-top: var(--space-4);
+    justify-content: center;
+    max-width: 600px;
 }
 
 .promptBtn {
     padding: var(--space-2) var(--space-3);
-    background: var(--bg-tertiary);
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 999px;
     color: var(--text-secondary);
@@ -160,14 +412,57 @@
 .promptBtn:hover {
     background: rgba(139, 92, 246, 0.06);
     color: var(--accent-purple);
-    border-color: rgba(139, 92, 246, 0.2);
+    border-color: rgba(139, 92, 246, 0.3);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
 }
 
+/* ── Typing Indicator ── */
+.typingIndicator {
+    display: flex;
+    gap: 4px;
+    align-self: flex-start;
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    margin-left: 44px;
+}
+
+.typingDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-purple);
+    opacity: 0.5;
+    animation: typingBounce 1.4s ease-in-out infinite;
+}
+
+.typingDot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typingDot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typingBounce {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.4;
+    }
+    30% {
+        transform: translateY(-6px);
+        opacity: 1;
+    }
+}
+
+/* ── Input Area ── */
 .inputArea {
     padding: var(--space-4);
     border-top: 1px solid var(--border-color);
     display: flex;
     gap: var(--space-3);
+    align-items: flex-end;
 }
 
 .chatInput {
@@ -180,6 +475,10 @@
     font-family: var(--font-family);
     font-size: var(--font-size-sm);
     transition: var(--transition-fast);
+    resize: none;
+    min-height: 42px;
+    max-height: 120px;
+    line-height: 1.5;
 }
 
 .chatInput:focus {
@@ -188,17 +487,66 @@
     box-shadow: 0 0 0 3px var(--accent-purple-glow);
 }
 
+.chatInput:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .sendBtn {
     padding: var(--space-3) var(--space-5);
     background: var(--gradient-accent);
     border: none;
     border-radius: var(--radius-md);
     color: white;
-    cursor: not-allowed;
-    opacity: 0.5;
+    cursor: pointer;
     font-family: var(--font-family);
     font-size: var(--font-size-sm);
     display: flex;
     align-items: center;
     gap: var(--space-2);
+    transition: var(--transition-fast);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.sendBtn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-glow-purple);
+}
+
+.sendBtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.stopBtn {
+    padding: var(--space-3) var(--space-5);
+    background: linear-gradient(135deg, var(--accent-red), #f97316);
+    border: none;
+    border-radius: var(--radius-md);
+    color: white;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-weight: 500;
+    white-space: nowrap;
+    transition: var(--transition-fast);
+}
+
+.stopBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.2);
+}
+
+.spinIcon {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }

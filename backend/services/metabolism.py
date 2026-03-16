@@ -9,7 +9,14 @@ import io
 import json
 import tempfile
 import os
+import subprocess
+import uuid
+import shutil
+import pandas as pd
 from typing import List, Dict, Optional
+
+
+
 
 import cobra
 from cobra.io import load_model, read_sbml_model
@@ -410,3 +417,98 @@ def get_network_data(
         "fba_objective_value": fba_obj_value,
         "has_flux": len(flux_map) > 0,
     }
+
+def run_scfea(file_bytes: bytes, filename: str, species: str = "human", is_sc_imputation: bool = False) -> Dict:
+    """Run scFEA for single-cell metabolic flux estimation.
+    
+    Args:
+        file_bytes (bytes): The uploaded single-cell file bytes (.h5ad or .csv)
+        filename (str): Original filename to determine extension
+        species (str): 'human' or 'mouse'
+        is_sc_imputation (bool): Whether to perform imputation (magic)
+        
+    Returns:
+        Dict: ScFEA output data containing predicted fluxes.
+    """
+    job_id = str(uuid.uuid4())
+    temp_dir = tempfile.mkdtemp(prefix=f"scfea_{job_id}_")
+    
+    try:
+        input_dir = os.path.join(temp_dir, "input")
+        output_dir = os.path.join(temp_dir, "output")
+        os.makedirs(input_dir)
+        os.makedirs(output_dir)
+        
+        input_file_path = os.path.join(input_dir, filename)
+        with open(input_file_path, "wb") as f:
+            f.write(file_bytes)
+            
+        csv_filename = "input.csv"
+        csv_path = os.path.join(input_dir, csv_filename)
+        
+        if filename.endswith(".h5ad"):
+            import anndata
+            adata = anndata.read_h5ad(input_file_path)
+            
+            # Extract dense expression matrix and var_names/obs_names 
+            X = adata.X.toarray() if hasattr(adata.X, "toarray") else adata.X
+            df = pd.DataFrame(X, index=adata.obs_names, columns=adata.var_names)
+            # scFEA expects rows to be cells and columns to be genes 
+            df.to_csv(csv_path)
+            
+        elif filename.endswith(".csv"):
+            shutil.copy(input_file_path, csv_path)
+        else:
+            raise ValueError("不支持此单细胞格式。请上传 .h5ad 或 .csv 文件。")
+            
+        module_file = "module_gene_m168.csv" if species == "human" else "module_gene_complete_mouse_m168.csv"
+        cm_matrix = "cmMat_c70_m168.csv" if species == "human" else "cmMat_complete_mouse_c70_m168.csv"
+            
+        scfea_base = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scFEA"))
+        scfea_src = os.path.join(scfea_base, "src", "scFEA.py")
+        scfea_data = os.path.join(scfea_base, "data")
+        
+        # Determine the correct python interpreter from current environment or fallback to system python
+        import sys
+        python_exe = sys.executable
+        
+        cmd = [
+            python_exe, scfea_src,
+            "--data_dir", scfea_data,
+            "--input_dir", input_dir,
+            "--res_dir", output_dir,
+            "--test_file", csv_filename,
+            "--moduleGene_file", module_file,
+            "--stoichiometry_matrix", cm_matrix,
+            "--sc_imputation", str(is_sc_imputation),
+            "--train_epoch", "10", 
+        ]
+        
+        process = subprocess.run(cmd, capture_output=True, text=True, cwd=scfea_base)
+        
+        if process.returncode != 0:
+            raise RuntimeError(f"scFEA 任务失败:\\n{process.stderr}\\n{process.stdout}")
+            
+        output_files = os.listdir(output_dir)
+        flux_file = next((f for f in output_files if f.endswith(".csv") and "module168" in f or "module" in f), None)
+        
+        if not flux_file:
+            raise RuntimeError(f"scFEA 运行完成，但未找到输出通量文件。输出目录: {output_files}")
+            
+        flux_df = pd.read_csv(os.path.join(output_dir, flux_file), index_col=0)
+        
+        # Round the dataframe values
+        flux_df = flux_df.round(4)
+        
+        return {
+            "fluxes": flux_df.values.tolist(),
+            "cells": flux_df.index.astype(str).tolist(),
+            "modules": flux_df.columns.astype(str).tolist(),
+            "species": species,
+            "epochs": 10
+        }
+        
+    finally:
+        shutil.rmtree(temp_dir)
+
+

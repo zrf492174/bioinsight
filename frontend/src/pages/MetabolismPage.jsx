@@ -9,6 +9,7 @@ import {
     runFVA,
     runKnockout,
     runEssentialGenes,
+    runScfea,
 } from '../api/client';
 import styles from './MetabolismPage.module.css';
 
@@ -17,6 +18,7 @@ const TABS = [
     { id: 'fva', label: 'FVA 变化分析', icon: Database },
     { id: 'knockout', label: '基因敲除', icon: Scissors },
     { id: 'essential', label: '必需基因', icon: ShieldAlert },
+    { id: 'scfea', label: '单细胞代谢 (scFEA)', icon: Database },
 ];
 
 export default function MetabolismPage() {
@@ -44,6 +46,12 @@ export default function MetabolismPage() {
     const [koResult, setKoResult] = useState(null);
     // Essential state
     const [essentialResult, setEssentialResult] = useState(null);
+
+    // scFEA state
+    const [scFile, setScFile] = useState(null);
+    const [scSpecies, setScSpecies] = useState('human');
+    const [scImputation, setScImputation] = useState(false);
+    const [scfeaResult, setScfeaResult] = useState(null);
 
     // Load built-in model on mount
     useEffect(() => {
@@ -91,6 +99,7 @@ export default function MetabolismPage() {
     const clearResults = () => {
         setFbaResult(null); setFvaResult(null);
         setKoResult(null); setEssentialResult(null);
+        setScfeaResult(null);
     };
 
     const getMediumObj = () => {
@@ -141,6 +150,19 @@ export default function MetabolismPage() {
         if (modelData?.genes?.length) {
             setKoGenes(modelData.genes.slice(0, 8).map(g => g.id).join(','));
         }
+    };
+
+    const handleRunScfea = async () => {
+        if (!scFile) {
+            setError('请选择单细胞表达数据文件（.h5ad 或 .csv）');
+            return;
+        }
+        setLoading(true); setError(''); setScfeaResult(null);
+        try {
+            const res = await runScfea(scFile, scSpecies, scImputation);
+            setScfeaResult(res.data);
+        } catch (e) { setError(`scFEA 运行失败: ${e.message}`); }
+        finally { setLoading(false); }
     };
 
     // Medium handlers
@@ -499,6 +521,81 @@ export default function MetabolismPage() {
                                         </tbody>
                                     </table>
                                 </div>
+                            </Card>
+                        </>
+                    )}
+                </div>
+            )}
+            {/* scFEA Tab */}
+            {activeTab === 'scfea' && (
+                <div className={styles.tabContent}>
+                    <Card title="单细胞代谢配置 (scFEA)" className={styles.configCard}>
+                        <div className={styles.configGrid}>
+                            <div className={styles.configSection}>
+                                <h4 className={styles.configLabel}><Upload size={14} /> 上传单细胞数据</h4>
+                                <label className={`btn btn-ghost ${styles.uploadLabel}`}>
+                                    <Upload size={14} /> 上传文件 (.h5ad, .csv)
+                                    <input
+                                        type="file"
+                                        accept=".h5ad,.csv"
+                                        onChange={(e) => setScFile(e.target.files?.[0])}
+                                        style={{ display: 'none' }}
+                                    />
+                                </label>
+                                {scFile && <span className={styles.modelId} style={{ marginTop: 8, display: 'block' }}>已选择: {scFile.name}</span>}
+                            </div>
+                            <div className={styles.configSection}>
+                                <h4 className={styles.configLabel}><Settings size={14} /> 模型物种</h4>
+                                <select className="form-select" value={scSpecies} onChange={(e) => setScSpecies(e.target.value)}>
+                                    <option value="human">人类 (Human M168)</option>
+                                    <option value="mouse">小鼠 (Mouse M168)</option>
+                                </select>
+                            </div>
+                            <div className={styles.configSection}>
+                                <h4 className={styles.configLabel}><Info size={14} /> MAGIC 数据插补</h4>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                                    <input type="checkbox" checked={scImputation} onChange={(e) => setScImputation(e.target.checked)} />
+                                    启用 MAGIC 插补 (推荐用于 10x Genomics 稀疏数据)
+                                </label>
+                            </div>
+                        </div>
+                        <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+                            <button className="btn btn-primary" onClick={handleRunScfea} disabled={loading}>
+                                {loading ? <><span className="spinner"></span> 计算中...</> : <><Play size={16} /> 运行 scFEA 预测通量</>}
+                            </button>
+                        </div>
+                    </Card>
+
+                    {scfeaResult && (
+                        <>
+                            <div className={styles.statsRow}>
+                                <div className={styles.stat}><div className={styles.statValue}>{scfeaResult.cells.length}</div><div className={styles.statLabel}>分析细胞数</div></div>
+                                <div className={styles.stat}><div className={styles.statValue}>{scfeaResult.modules.length}</div><div className={styles.statLabel}>代谢模块数</div></div>
+                                <div className={styles.stat}><div className={styles.statValue}>{scfeaResult.species === 'human' ? 'Human' : 'Mouse'}</div><div className={styles.statLabel}>使用物种模型</div></div>
+                            </div>
+                            
+                            <Card title="细胞-代谢模块 通量热图" className={styles.chartCard}>
+                                <Plot
+                                    data={[{
+                                        x: scfeaResult.modules,
+                                        y: scfeaResult.cells.length > 500 ? scfeaResult.cells.slice(0, 500) : scfeaResult.cells,
+                                        z: scfeaResult.cells.length > 500 ? scfeaResult.fluxes.slice(0, 500) : scfeaResult.fluxes,
+                                        type: 'heatmap',
+                                        colorscale: 'RdBu',
+                                        reversescale: true,
+                                        zsmooth: 'best',
+                                    }]}
+                                    layout={{
+                                        margin: { l: 80, r: 20, t: 30, b: 120 },
+                                        height: 600,
+                                        paper_bgcolor: 'transparent',
+                                        plot_bgcolor: 'transparent',
+                                        font: { family: 'Inter, sans-serif', color: '#334155' },
+                                        xaxis: { title: 'Metabolic Modules', tickfont: { size: 9 }, tickangle: -45 },
+                                        yaxis: { title: 'Cells (Max 500 shown)', tickfont: { size: 8 } }
+                                    }}
+                                    useResizeHandler style={{ width: '100%' }} config={{ displayModeBar: false }}
+                                />
                             </Card>
                         </>
                     )}

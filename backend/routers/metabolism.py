@@ -13,6 +13,7 @@ from backend.services.metabolism import (
     run_gene_knockout,
     find_essential_genes_list,
     get_network_data,
+    run_scfea,
 )
 
 router = APIRouter(prefix="/api/metabolism", tags=["Metabolism"])
@@ -165,3 +166,24 @@ async def network_data_custom(
         return {"status": "success", "data": result}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+@router.post("/scfea")
+async def scfea_analysis(
+    file: UploadFile = File(...),
+    species: str = Form("human"),
+    is_sc_imputation: bool = Form(False)
+):
+    """Run scFEA single-cell metabolic flux analysis."""
+    try:
+        content = await file.read()
+        result = run_scfea(
+            file_bytes=content,
+            filename=file.filename,
+            species=species,
+            is_sc_imputation=is_sc_imputation
+        )
+        return {"status": "success", "data": result}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
