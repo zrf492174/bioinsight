@@ -13,7 +13,9 @@ import {
     Map,
     Microscope,
     Layers,
-    Activity
+    Activity,
+    Dna,
+    GitMerge
 } from 'lucide-react';
 import styles from './Sidebar.module.css';
 
@@ -34,6 +36,8 @@ const analysisItems = [
     { path: '/single-cell', icon: Microscope, label: '单细胞分析' },
     { path: '/spatial', icon: Layers, label: '空间转录组' },
     { path: '/compass', icon: Activity, label: 'Compass 代谢' },
+    { path: '/gpruler', icon: Dna, label: 'GPR 规则重建' },
+    { path: '/cobramod', icon: GitMerge, label: 'CobraMod 模型校正' },
 ];
 
 const aiItems = [

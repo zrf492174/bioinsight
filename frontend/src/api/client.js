@@ -3,6 +3,9 @@ const API_BASE = '/api';
 async function apiFetch(url, options = {}) {
     const res = await fetch(`${API_BASE}${url}`, options);
     const data = await res.json();
+    if (!res.ok) {
+        throw new Error(data.message || data.detail || `HTTP Error ${res.status}`);
+    }
     if (data.status === 'error') throw new Error(data.message);
     return data;
 }
@@ -177,6 +180,55 @@ export async function getCompassTaskStatus(taskId) {
 
 export async function listCompassTasks() {
     return apiFetch('/compass/tasks');
+}
+
+/* ── GPRuler ── */
+export async function submitGPRulerTask(mode, file = null, params = {}) {
+    const form = new FormData();
+    form.append('mode', mode);
+    if (params.model_name) form.append('model_name', params.model_name);
+    if (params.organism_name) form.append('organism_name', params.organism_name);
+    if (params.kegg_code) form.append('kegg_code', params.kegg_code);
+    if (file) form.append('file', file);
+    return apiFetch('/gpruler/submit', { method: 'POST', body: form });
+}
+
+export async function getGPRulerTaskStatus(taskId) {
+    return apiFetch(`/gpruler/task/${taskId}`);
+}
+
+export async function listGPRulerTasks() {
+    return apiFetch('/gpruler/tasks');
+}
+
+/* ── CobraMod Curation ── */
+export async function uploadModelForCuration(file) {
+    const form = new FormData();
+    form.append('file', file);
+    return apiFetch('/curation/upload', { method: 'POST', body: form });
+}
+
+export async function submitCurationTask(modelToken, filename, operation, database, items, mode = 'manual') {
+    const form = new FormData();
+    form.append('model_token', modelToken);
+    form.append('filename', filename);
+    form.append('mode', mode);
+    form.append('operation', operation);
+    form.append('database', database);
+    form.append('items', items);
+    return apiFetch('/curation/submit', { method: 'POST', body: form });
+}
+
+export async function getCurationTaskStatus(taskId) {
+    return apiFetch(`/curation/task/${taskId}`);
+}
+
+export async function listCurationTasks() {
+    return apiFetch('/curation/tasks');
+}
+
+export function getCuratedModelDownloadUrl(modelToken, filename) {
+    return `${API_BASE}/curation/download/${modelToken}?filename=${encodeURIComponent(filename)}`;
 }
 
 /* ── AI Agent ── */

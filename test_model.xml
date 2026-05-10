@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version1/core" xmlns:fbc="http://www.sbml.org/sbml/level3/version1/fbc/version2" sboTerm="SBO:0000624" level="3" version="1" fbc:required="false">
+  <model metaid="meta_test_model" id="test_model" fbc:strict="true">
+    <listOfUnitDefinitions>
+      <unitDefinition id="mmol_per_gDW_per_hr">
+        <listOfUnits>
+          <unit kind="mole" exponent="1" scale="-3" multiplier="1"/>
+          <unit kind="gram" exponent="-1" scale="0" multiplier="1"/>
+          <unit kind="second" exponent="-1" scale="0" multiplier="3600"/>
+        </listOfUnits>
+      </unitDefinition>
+    </listOfUnitDefinitions>
+    <listOfCompartments>
+      <compartment id="c" constant="true"/>
+    </listOfCompartments>
+    <listOfSpecies>
+      <species id="M_M1" name="Water" compartment="c" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false" fbc:chemicalFormula="H2O"/>
+    </listOfSpecies>
+    <listOfParameters>
+      <parameter sboTerm="SBO:0000626" id="cobra_default_lb" value="-1000" constant="true"/>
+      <parameter sboTerm="SBO:0000626" id="cobra_default_ub" value="1000" constant="true"/>
+      <parameter sboTerm="SBO:0000626" id="cobra_0_bound" value="0" constant="true"/>
+      <parameter sboTerm="SBO:0000626" id="minus_inf" value="-INF" constant="true"/>
+      <parameter sboTerm="SBO:0000626" id="plus_inf" value="INF" constant="true"/>
+    </listOfParameters>
+    <listOfReactions>
+      <reaction id="R_R1" name="Test Reaction" reversible="false" fast="false" fbc:lowerFluxBound="cobra_0_bound" fbc:upperFluxBound="cobra_default_ub">
+        <listOfProducts>
+          <speciesReference species="M_M1" stoichiometry="1" constant="true"/>
+        </listOfProducts>
+        <fbc:geneProductAssociation>
+          <fbc:or>
+            <fbc:geneProductRef fbc:geneProduct="G_G1"/>
+            <fbc:geneProductRef fbc:geneProduct="G_G2"/>
+          </fbc:or>
+        </fbc:geneProductAssociation>
+      </reaction>
+    </listOfReactions>
+    <fbc:listOfObjectives fbc:activeObjective="obj">
+      <fbc:objective fbc:id="obj" fbc:type="maximize"/>
+    </fbc:listOfObjectives>
+    <fbc:listOfGeneProducts>
+      <fbc:geneProduct fbc:id="G_G2" fbc:name="G_G2" fbc:label="G_G2"/>
+      <fbc:geneProduct fbc:id="G_G1" fbc:name="G_G1" fbc:label="G_G1"/>
+    </fbc:listOfGeneProducts>
+  </model>
+</sbml>

@@ -89,6 +89,13 @@ export default function GeneConvert() {
 
             {result && (
                 <div className={styles.resultsSection}>
+                    {result.summary.source && result.summary.source.includes('mygene error') && (
+                        <div className={styles.warningMsg}>
+                            ⚠️ MyGene.info API 连接失败，已自动回退到内置映射表（仅包含 20 个常见基因）。
+                            <br />
+                            <small style={{ opacity: 0.8 }}>错误详情: {result.summary.source.replace('demo (', '').replace(')', '')}</small>
+                        </div>
+                    )}
                     <div className={styles.summaryRow}>
                         <StatCard title="已转换" icon={<CheckCircle size={14} />} value={result.summary.found} label={`/ ${result.summary.total} 个基因`} color="var(--accent-green)" />
                         <StatCard title="未找到" icon={<AlertCircle size={14} />} value={result.summary.not_found} label="无匹配结果" color="var(--accent-red)" />

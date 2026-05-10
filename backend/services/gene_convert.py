@@ -127,6 +127,38 @@ def convert_genes_demo(
     }
 
 
+def _create_mygene_client():
+    """Create a MyGene.info client with SSL error handling."""
+    import ssl
+    import urllib3
+
+    # Suppress InsecureRequestWarnings when using unverified SSL
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    mg = mygene.MyGeneInfo()
+
+    # Patch the underlying requests session to handle SSL issues
+    import requests
+    from requests.adapters import HTTPAdapter
+
+    class SSLAdapter(HTTPAdapter):
+        """HTTPS adapter that handles SSL verification issues."""
+        def init_poolmanager(self, *args, **kwargs):
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            ctx.set_ciphers("DEFAULT@SECLEVEL=1")
+            kwargs["ssl_context"] = ctx
+            return super().init_poolmanager(*args, **kwargs)
+
+    session = requests.Session()
+    session.verify = False
+    session.mount("https://", SSLAdapter())
+    mg._session = session
+
+    return mg
+
+
 def convert_genes_mygene(
     gene_ids: List[str],
     from_type: str = "symbol",
@@ -135,69 +167,87 @@ def convert_genes_mygene(
 ) -> Dict:
     """Convert gene IDs using MyGene.info API."""
     if not HAS_MYGENE:
-        return convert_genes_demo(gene_ids, from_type, to_type)
-
-    try:
-        mg = mygene.MyGeneInfo()
-
-        scopes_map = {
-            "symbol": "symbol",
-            "entrez": "entrezgene",
-            "ensembl": "ensembl.gene",
-        }
-        scopes = scopes_map.get(from_type, "symbol,entrezgene,ensembl.gene")
-
-        results_raw = mg.querymany(
-            gene_ids,
-            scopes=scopes,
-            fields="symbol,entrezgene,ensembl.gene,name",
-            species=species,
-            returnall=True,
-        )
-
-        results = []
-        found = 0
-        not_found = 0
-
-        hits_map = {}
-        for hit in results_raw.get("out", []):
-            query = hit.get("query", "")
-            if hit.get("notfound"):
-                not_found += 1
-                results.append({
-                    "input": query,
-                    "symbol": "",
-                    "entrez": "",
-                    "ensembl": "",
-                    "name": "",
-                    "status": "not_found",
-                })
-            else:
-                found += 1
-                ensembl = hit.get("ensembl", {})
-                if isinstance(ensembl, list):
-                    ensembl = ensembl[0] if ensembl else {}
-                results.append({
-                    "input": query,
-                    "symbol": hit.get("symbol", ""),
-                    "entrez": str(hit.get("entrezgene", "")),
-                    "ensembl": ensembl.get("gene", "") if isinstance(ensembl, dict) else "",
-                    "name": hit.get("name", ""),
-                    "status": "found",
-                })
-
-        return {
-            "results": results,
-            "summary": {
-                "total": len(results),
-                "found": found,
-                "not_found": not_found,
-                "from_type": from_type,
-                "to_type": to_type,
-                "source": "mygene",
-            }
-        }
-    except Exception as e:
-        result = convert_genes_demo(gene_ids, from_type)
-        result["summary"]["source"] = f"demo (mygene error: {str(e)})"
+        result = convert_genes_demo(gene_ids, from_type, to_type)
+        result["summary"]["source"] = "demo (mygene not installed)"
         return result
+
+    last_error = None
+    for attempt in range(2):
+        try:
+            if attempt == 0:
+                mg = mygene.MyGeneInfo()
+            else:
+                # Retry with custom SSL handling
+                mg = _create_mygene_client()
+
+            scopes_map = {
+                "symbol": "symbol",
+                "entrez": "entrezgene",
+                "ensembl": "ensembl.gene",
+            }
+            scopes = scopes_map.get(from_type, "symbol,entrezgene,ensembl.gene")
+
+            results_raw = mg.querymany(
+                gene_ids,
+                scopes=scopes,
+                fields="symbol,entrezgene,ensembl.gene,name",
+                species=species,
+                returnall=True,
+            )
+
+            results = []
+            found = 0
+            not_found = 0
+
+            for hit in results_raw.get("out", []):
+                query = hit.get("query", "")
+                if hit.get("notfound"):
+                    not_found += 1
+                    results.append({
+                        "input": query,
+                        "symbol": "",
+                        "entrez": "",
+                        "ensembl": "",
+                        "name": "",
+                        "status": "not_found",
+                    })
+                else:
+                    found += 1
+                    ensembl = hit.get("ensembl", {})
+                    if isinstance(ensembl, list):
+                        ensembl = ensembl[0] if ensembl else {}
+                    results.append({
+                        "input": query,
+                        "symbol": hit.get("symbol", ""),
+                        "entrez": str(hit.get("entrezgene", "")),
+                        "ensembl": ensembl.get("gene", "") if isinstance(ensembl, dict) else "",
+                        "name": hit.get("name", ""),
+                        "status": "found",
+                    })
+
+            source = "mygene"
+            if attempt > 0:
+                source = "mygene (SSL fallback)"
+
+            return {
+                "results": results,
+                "summary": {
+                    "total": len(results),
+                    "found": found,
+                    "not_found": not_found,
+                    "from_type": from_type,
+                    "to_type": to_type,
+                    "source": source,
+                }
+            }
+        except Exception as e:
+            last_error = e
+            # If it's an SSL error and this is the first attempt, retry
+            if attempt == 0 and "SSL" in str(e):
+                continue
+            break
+
+    # All attempts failed — fallback to demo
+    result = convert_genes_demo(gene_ids, from_type)
+    result["summary"]["source"] = f"demo (mygene error: {str(last_error)})"
+    return result

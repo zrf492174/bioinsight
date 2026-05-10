@@ -7,6 +7,7 @@ from backend.services.compass import (
     get_compass_task,
     list_compass_tasks,
 )
+import threading
 
 router = APIRouter(prefix="/api/compass", tags=["Compass"])
 
@@ -41,21 +42,24 @@ async def compass_submit(
             test_mode=test_mode,
         )
 
-        # Schedule the heavy work in the background
-        background_tasks.add_task(
-            run_compass_background,
-            job_id=job_id,
-            file_bytes=content,
-            filename=file.filename,
-            species=species,
-            model=model,
-            num_processes=num_processes,
-            num_threads=num_threads,
-            microcluster_size=microcluster_size,
-            lambda_val=lambda_val,
-            calc_metabolites=calc_metabolites,
-            test_mode=test_mode,
-        )
+        # Schedule the heavy work in the background without blocking FastAPI threadpool
+        def launch_compass_bg():
+            run_compass_background(
+                job_id=job_id,
+                file_bytes=content,
+                filename=file.filename,
+                species=species,
+                model=model,
+                num_processes=num_processes,
+                num_threads=num_threads,
+                microcluster_size=microcluster_size,
+                lambda_val=lambda_val,
+                calc_metabolites=calc_metabolites,
+                test_mode=test_mode,
+            )
+            
+        t = threading.Thread(target=launch_compass_bg, daemon=True)
+        background_tasks.add_task(t.start)
 
         return {
             "status": "success",

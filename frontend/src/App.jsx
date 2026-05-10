@@ -15,6 +15,8 @@ import MetabolicMapPage from './pages/MetabolicMapPage';
 import SingleCell from './pages/SingleCell';
 import Spatial from './pages/Spatial';
 import CompassPage from './pages/CompassPage';
+import GPRulerPage from './pages/GPRulerPage';
+import CobraModPage from './pages/CobraModPage';
 
 export default function App() {
     return (
@@ -38,6 +40,8 @@ export default function App() {
                             <Route path="/single-cell" element={<SingleCell />} />
                             <Route path="/spatial" element={<Spatial />} />
                             <Route path="/compass" element={<CompassPage />} />
+                            <Route path="/gpruler" element={<GPRulerPage />} />
+                            <Route path="/cobramod" element={<CobraModPage />} />
                             <Route path="/agent" element={<AgentChat />} />
                         </Routes>
                     </div>
